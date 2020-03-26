@@ -42,14 +42,7 @@ import { constants } from './utils/constants';
 import { fsWrapper } from './utils/fs_wrapper';
 import { utils } from './utils/utils';
 
-type TYPE_ALL_FILES_IDENTIFIER = '*';
-export const ALL_CONTRACTS_IDENTIFIER = '*';
-export const ALL_FILES_IDENTIFIER = '*';
-export const DEFAULT_CONTRACTS_DIR = path.resolve('contracts');
-export const DEFAULT_ARTIFACTS_DIR = path.resolve('artifacts');
-export const DEFAULT_USE_DOCKERISED_SOLC = false;
-export const DEFAULT_IS_OFFLINE_MODE = false;
-export const DEFAULT_SHOULD_SAVE_STANDARD_INPUT = false;
+import { ALL_CONTRACTS_IDENTIFIER, ALL_FILES_IDENTIFIER } from './compiler';
 
 // Solc compiler settings cannot be configured from the commandline.
 // If you need this configured, please create a `compiler.json` config file
@@ -87,7 +80,7 @@ interface ContractData {
  * The Compiler facilitates compiling Solidity smart contracts and saves the results
  * to artifact files.
  */
-export class Compiler {
+export class CompilerV05 {
     private readonly _resolver: Resolver;
     private readonly _nameResolver: NameResolver;
     private readonly _contractsDir: string;

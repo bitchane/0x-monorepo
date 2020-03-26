@@ -43,13 +43,13 @@ import { fsWrapper } from './utils/fs_wrapper';
 import { utils } from './utils/utils';
 
 type TYPE_ALL_FILES_IDENTIFIER = '*';
-export const ALL_CONTRACTS_IDENTIFIER = '*';
-export const ALL_FILES_IDENTIFIER = '*';
-export const DEFAULT_CONTRACTS_DIR = path.resolve('contracts');
-export const DEFAULT_ARTIFACTS_DIR = path.resolve('artifacts');
-export const DEFAULT_USE_DOCKERISED_SOLC = false;
-export const DEFAULT_IS_OFFLINE_MODE = false;
-export const DEFAULT_SHOULD_SAVE_STANDARD_INPUT = false;
+const ALL_CONTRACTS_IDENTIFIER = '*';
+const ALL_FILES_IDENTIFIER = '*';
+const DEFAULT_CONTRACTS_DIR = path.resolve('contracts');
+const DEFAULT_ARTIFACTS_DIR = path.resolve('artifacts');
+const DEFAULT_USE_DOCKERISED_SOLC = false;
+const DEFAULT_IS_OFFLINE_MODE = false;
+const DEFAULT_SHOULD_SAVE_STANDARD_INPUT = false;
 
 // Solc compiler settings cannot be configured from the commandline.
 // If you need this configured, please create a `compiler.json` config file
