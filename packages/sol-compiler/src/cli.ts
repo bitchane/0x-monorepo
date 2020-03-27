@@ -42,7 +42,7 @@ const SEPARATOR = ',';
         contracts,
         isOfflineMode: process.env.SOLC_OFFLINE ? true : undefined,
     };
-    const compiler = new Compiler(opts);
+    const compiler = new Compiler(await Compiler.getCompilerOptionsAsync(opts));
     if (argv.watch) {
         await compiler.watchAsync();
     } else {

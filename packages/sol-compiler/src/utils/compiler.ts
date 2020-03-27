@@ -1,13 +1,14 @@
 import { ContractSource, Resolver } from '@0x/sol-resolver';
 import { fetchAsync, logUtils } from '@0x/utils';
 import chalk from 'chalk';
-import { execSync } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { ContractArtifact } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as requireFromString from 'require-from-string';
 import * as solc from 'solc';
+import { promisify } from 'util';
 
 import { constants } from './constants';
 import { fsWrapper } from './fs_wrapper';
@@ -160,10 +161,34 @@ export async function compileDockerAsync(
     standardInput: solc.StandardInput,
 ): Promise<solc.StandardOutput> {
     const standardInputStr = JSON.stringify(standardInput, null, 2);
-    const dockerCommand = `docker run -i -a stdin -a stdout -a stderr ethereum/solc:${solcVersion} solc --standard-json`;
-    const standardOutputStr = execSync(dockerCommand, { input: standardInputStr }).toString();
-    const compiled: solc.StandardOutput = JSON.parse(standardOutputStr);
-    return compiled;
+    const dockerArgs = [
+        'run',
+        '-i',
+        '-a',
+        'stdin',
+        '-a',
+        'stdout',
+        '-a',
+        'stderr',
+        `ethereum/solc:${solcVersion}`,
+        'solc',
+        '--standard-json',
+    ];
+    return new Promise<solc.StandardOutput>((accept, reject) => {
+        const p = spawn('docker', dockerArgs, { shell: true, stdio: ['pipe', 'inherit', 'inherit'] });
+        p.stdin.write(standardInputStr);
+        p.stdin.end();
+        let fullOutput = '';
+        p.stdout.on('data', (chunk: string) => {
+            fullOutput += chunk;
+        });
+        p.on('close', code => {
+            if (code !== 0) {
+                reject('Compilation failed');
+            }
+            accept(JSON.parse(fullOutput));
+        });
+    });
 }
 
 /**
@@ -436,4 +461,32 @@ export function getDependencyNameToPackagePath(
         dependencyNameToPath[dependencyName] = dependencyPackagePath;
     });
     return dependencyNameToPath;
+}
+
+/**
+ * Strips any extra characters after the commit hash of a solc version string.
+ */
+export function normalizeFullSolcVersion(fullSolcVersion: string): string {
+    const m = /\^\d+\.\d+\.\d+\+commit\.[a-f0-9]{8}/.exec(fullSolcVersion);
+    if (!m) {
+        throw new Error(`Unable to parse solc version string "${fullSolcVersion}"`);
+    }
+    return m[0];
+}
+
+/**
+ * Gets the full version string of a dockerized solc.
+ */
+export async function getDockerFullSolcVersionAsync(solcVersion: string): Promise<string> {
+    const dockerCommand = `docker run ethereum/solc:${solcVersion} --version`;
+    const versionCommandOutput = (await promisify(exec)(dockerCommand)).stdout.toString();
+    const versionCommandOutputParts = versionCommandOutput.split(' ');
+    return normalizeFullSolcVersion(versionCommandOutputParts[versionCommandOutputParts.length - 1].trim());
+}
+
+/**
+ * Gets the full version string of a JS module solc.
+ */
+export async function getJSFullSolcVersionAsync(solcVersion: string, isOfflineMode: boolean = false): Promise<string> {
+    return normalizeFullSolcVersion((await getSolcJSAsync(solcVersion, isOfflineMode)).version());
 }
